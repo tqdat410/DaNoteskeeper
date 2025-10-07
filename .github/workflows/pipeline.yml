@@ -73,6 +73,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/datanoteskeeper
+            cd /home/ubuntu/danoteskeeper
             docker compose pull danoteskeeper
             docker compose up -d --no-deps --force-recreate danoteskeeper

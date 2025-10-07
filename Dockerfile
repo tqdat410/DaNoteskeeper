@@ -33,7 +33,7 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 # Expose port
-EXPOSE 9090
+EXPOSE 8080
 
 # Run the application with optimized JVM settings
 ENTRYPOINT ["java", \
