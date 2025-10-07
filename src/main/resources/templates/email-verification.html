@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Verification - NoteKeeper</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+        background: #fff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #222;
+      }
+      .container {
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+        padding: 2rem;
+      }
+      .logo {
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
+        object-fit: cover;
+        background: transparent;
+        margin: 0 auto 20px;
+      }
+      .brand {
+        font-size: 24px;
+        font-weight: 800;
+        color: #dfba5f;
+        margin-bottom: 30px;
+      }
+      .message {
+        font-size: 16px;
+        line-height: 1.5;
+        color: #666;
+        margin-bottom: 20px;
+      }
+      .success {
+        color: #4caf50;
+      }
+      .error {
+        color: #f44336;
+      }
+      .expired {
+        color: #ff9800;
+      }
+      .already-registered {
+        color: #2196f3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img
+        class="logo"
+        src="https://res.cloudinary.com/do6szo7zy/image/upload/v1759767673/copy_imjnsu.png"
+        alt="DaNoteskeeper"
+      />
+      <div class="brand">DaNoteskeeper</div>
+
+      <div th:if="${result == 'SUCCESS'}" class="success">
+        <div class="message">
+          Email verification successful! Your account is now active.
+        </div>
+      </div>
+
+      <div th:if="${result == 'EXPIRED'}" class="expired">
+        <div class="message">
+          Verification link has expired or is invalid. Please request a new
+          verification email.
+        </div>
+      </div>
+
+      <div th:if="${result == 'ALREADY_REGISTERED'}" class="already-registered">
+        <div class="message">
+          This email is already registered. You can login directly to your
+          account.
+        </div>
+      </div>
+
+      <div th:if="${result == 'ERROR'}" class="error">
+        <div class="message">
+          Unable to verify email due to system error. Please try again later.
+        </div>
+      </div>
+
+      <div
+        th:if="${result != 'SUCCESS' and result != 'EXPIRED' and result != 'ALREADY_REGISTERED' and result != 'ERROR'}"
+        class="error"
+      >
+        <div class="message">
+          Unable to determine email verification status. Please try again.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
