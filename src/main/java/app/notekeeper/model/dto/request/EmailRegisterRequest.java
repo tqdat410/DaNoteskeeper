@@ -30,7 +30,9 @@ public class EmailRegisterRequest {
     }
 
     // Convenience method for gender (default null)
-    public String getGender() {
-        return null;
-    }
+
+
+    @Schema(description = "Gender", example = "MALE")
+    private String gender;
+
 }

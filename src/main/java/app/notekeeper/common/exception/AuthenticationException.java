@@ -17,7 +17,16 @@ enum AuthenticationErrorType {
 
     private final Integer code;
     private final String message;
+
+    // Constructor PHẢI có để nhận (int, String)
+    AuthenticationErrorType(int code, String message) {
+        this.code = code;
+        this.message = message;
+    }
+    public int getCode() { return code; }
+    public String getMessage() { return message; }
 }
+
 
 @Getter
 public class AuthenticationException extends RuntimeException {
