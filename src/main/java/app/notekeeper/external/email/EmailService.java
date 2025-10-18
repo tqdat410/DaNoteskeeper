@@ -32,13 +32,13 @@ public class EmailService {
             String verificationUrl = baseUrl + "/api/v1/auth/verify-email?token=" + verificationToken;
             String htmlContent = loadEmailTemplate("templates/email-send-template.html",
                     name, verificationUrl, "Email Confirmation", "Confirm Email",
-                    "Thank you for registering with NoteKeeper. Please click the button below to confirm your email address and complete your registration.",
+                    "Thank you for registering with DaNoteskeeper. Please click the button below to confirm your email address and complete your registration.",
                     "Note: The verification link will expire in 5 minutes and can only be used once.");
 
             CreateEmailOptions emailOptions = CreateEmailOptions.builder()
-                    .from("DaNotekeeper <no-reply@dattq.click>")
+                    .from("DaNoteskeeper <no-reply@dattq.click>")
                     .to(toEmail)
-                    .subject("Email Confirmation - NoteKeeper")
+                    .subject("Email Confirmation - DaNoteskeeper")
                     .html(htmlContent)
                     .build();
 
@@ -63,13 +63,13 @@ public class EmailService {
             String resetUrl = baseUrl + "/api/v1/auth/reset-password?token=" + resetToken;
             String htmlContent = loadEmailTemplate("templates/email-send-template.html",
                     name, resetUrl, "Password Reset", "Reset Password",
-                    "We received a request to reset your password for your NoteKeeper account. Click the button below to reset your password.",
+                    "We received a request to reset your password for your DaNoteskeeper account. Click the button below to reset your password.",
                     "Note: This password reset link will expire in 5 minutes and can only be used once.");
 
             CreateEmailOptions emailOptions = CreateEmailOptions.builder()
                     .from("DaNoteskeeper <no-reply@dattq.click>")
                     .to(toEmail)
-                    .subject("Password Reset - NoteKeeper")
+                    .subject("Password Reset - DaNoteskeeper")
                     .html(htmlContent)
                     .build();
 
