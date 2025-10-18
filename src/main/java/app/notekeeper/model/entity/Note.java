@@ -45,6 +45,9 @@ public class Note extends BaseEntity {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
+
     @Column(name = "ai_summary")
     private String aiSummary;
 
