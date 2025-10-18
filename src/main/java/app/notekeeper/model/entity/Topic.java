@@ -41,4 +41,8 @@ public class Topic extends BaseEntity {
     @Column(name = "ai_summary")
     private String aiSummary;
 
+    @Column(name = "is_default", nullable = false)
+    @Builder.Default
+    private boolean isDefault = false;
+
 }

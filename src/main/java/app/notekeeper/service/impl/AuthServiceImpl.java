@@ -32,6 +32,7 @@ import app.notekeeper.repository.EmailVerificationRepository;
 import app.notekeeper.repository.RefreshTokenRepository;
 import app.notekeeper.repository.UserRepository;
 import app.notekeeper.service.AuthService;
+import app.notekeeper.service.TopicService;
 import app.notekeeper.security.CustomUserDetails;
 import app.notekeeper.security.jwt.JwtProperties;
 import app.notekeeper.security.jwt.JwtProvider;
@@ -54,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProperties jwtProperties;
     private final GoogleOAuthService googleOAuthService;
     private final EmailService emailService;
+    private final TopicService topicService;
 
     @Override
     public JSendResponse<AuthTokenResponse> loginWithEmail(EmailLoginRequest request) {
@@ -182,6 +184,11 @@ public class AuthServiceImpl implements AuthService {
 
             User savedUser = userRepository.save(newUser);
             log.info("Created new user from Google: {}", email);
+
+            // Initialize default topic for new user
+            topicService.initDefaultTopic(savedUser.getId());
+            log.info("Default topic initialized for user: {}", savedUser.getId());
+
             return savedUser;
         }
     }
@@ -364,7 +371,11 @@ public class AuthServiceImpl implements AuthService {
                     .provider(null) // Local registration
                     .build();
 
-            userRepository.save(newUser);
+            User savedUser = userRepository.save(newUser);
+
+            // Initialize default topic for new user
+            topicService.initDefaultTopic(savedUser.getId());
+            log.info("Default topic initialized for user: {}", savedUser.getId());
 
             // Cleanup Redis data
             emailVerificationRepository.deleteById(token);
