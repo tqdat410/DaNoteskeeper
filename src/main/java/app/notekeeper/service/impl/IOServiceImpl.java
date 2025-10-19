@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import app.notekeeper.common.exception.ServiceException;
 import app.notekeeper.common.exception.SystemException;
 import app.notekeeper.common.exception.ValidationException;
+import app.notekeeper.event.NoteCreatedEvent;
 import app.notekeeper.model.dto.request.FileUploadRequest;
 import app.notekeeper.model.dto.request.TextUploadRequest;
 import app.notekeeper.model.dto.response.JSendResponse;
@@ -45,6 +47,7 @@ public class IOServiceImpl implements IOService {
     private final NoteRepository noteRepository;
     private final TopicRepository topicRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.storage.upload-dir}")
     private String uploadDir;
@@ -123,6 +126,9 @@ public class IOServiceImpl implements IOService {
             noteRepository.save(note);
             log.info("Note created successfully with ID: {}", note.getId());
 
+            // Publish note created event
+            eventPublisher.publishEvent(new NoteCreatedEvent(note.getId()));
+
             return JSendResponse.success("File uploaded successfully");
 
         } catch (ServiceException | ValidationException e) {
@@ -175,6 +181,9 @@ public class IOServiceImpl implements IOService {
 
             noteRepository.save(note);
             log.info("Text note created successfully with ID: {}", note.getId());
+
+            // Publish note created event
+            eventPublisher.publishEvent(new NoteCreatedEvent(note.getId()));
 
             return JSendResponse.success("Text note created successfully");
 

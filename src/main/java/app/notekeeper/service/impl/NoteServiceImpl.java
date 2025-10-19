@@ -13,6 +13,7 @@ import app.notekeeper.common.exception.SystemException;
 import app.notekeeper.common.exception.ValidationException;
 import app.notekeeper.model.dto.request.NoteUpdateRequest;
 import app.notekeeper.model.dto.response.JSendResponse;
+import app.notekeeper.model.dto.response.NoteQueryResponse;
 import app.notekeeper.model.dto.response.NoteResponse;
 import app.notekeeper.model.entity.Note;
 import app.notekeeper.model.enums.NoteType;
@@ -37,7 +38,7 @@ public class NoteServiceImpl implements NoteService {
         try {
             log.info("Getting text note with ID: {}", noteId);
 
-            Note note = noteRepository.findById(noteId)
+            NoteQueryResponse note = noteRepository.findNoteResponseById(noteId)
                     .orElseThrow(() -> ServiceException.resourceNotFound("Note not found with ID: " + noteId));
 
             // Verify ownership
@@ -57,7 +58,7 @@ public class NoteServiceImpl implements NoteService {
                                 "This endpoint only supports TEXT notes. Use /stream for IMAGE/DOCUMENT"));
             }
 
-            NoteResponse response = buildNoteResponse(note);
+            NoteResponse response = buildNoteResponseFromQuery(note);
             log.info("Text note retrieved successfully: {}", noteId);
 
             return JSendResponse.success(response, "Note retrieved successfully");
@@ -209,11 +210,11 @@ public class NoteServiceImpl implements NoteService {
             }
 
             // Fetch notes with filters and pagination
-            Page<Note> notesPage = noteRepository.findNotesByOwnerWithFilters(
+            Page<NoteQueryResponse> notesPage = noteRepository.findNotesByOwnerWithFilters(
                     currentUserId, topicId, type, pageable);
 
             // Convert to response DTOs
-            Page<NoteResponse> responsePage = notesPage.map(this::buildNoteResponse);
+            Page<NoteResponse> responsePage = notesPage.map(this::buildNoteResponseFromQuery);
 
             log.info("Notes retrieved successfully - total elements: {}, total pages: {}",
                     responsePage.getTotalElements(), responsePage.getTotalPages());
@@ -228,6 +229,29 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
+    /**
+     * Build NoteResponse from NoteQueryResponse (projection without embedding)
+     */
+    private NoteResponse buildNoteResponseFromQuery(NoteQueryResponse note) {
+        return NoteResponse.builder()
+                .id(note.getId())
+                .title(note.getTitle())
+                .content(note.getContent())
+                .description(note.getDescription())
+                .type(note.getType())
+                .ownerId(note.getOwner().getId())
+                .ownerDisplayName(note.getOwner().getDisplayName())
+                .topicId(note.getTopic() != null ? note.getTopic().getId() : null)
+                .topicName(note.getTopic() != null ? note.getTopic().getName() : null)
+                .createdAt(note.getCreatedAt())
+                .updatedAt(note.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Build NoteResponse from full Note entity (includes embedding)
+     * Used only when full entity is loaded (e.g., after updates)
+     */
     private NoteResponse buildNoteResponse(Note note) {
         return NoteResponse.builder()
                 .id(note.getId())
