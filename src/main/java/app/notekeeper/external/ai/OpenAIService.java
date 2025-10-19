@@ -184,7 +184,6 @@ public class OpenAIService {
 
                         IMPORTANT: Return ONLY a valid JSON object without markdown formatting.
                         Do not use ```json or ``` code blocks.
-                        Start your response with { and end with }.
 
                         {noteMetadata}
 
@@ -329,7 +328,6 @@ public class OpenAIService {
                 You must respond with a JSON object containing topicId, aiSummary, and content fields.
                 CRITICAL: Return ONLY the raw JSON object without any markdown code blocks or formatting.
                 Do NOT wrap the response in ```json or ``` tags.
-                The response must start directly with { and end with }.
 
                 Example format (return exactly like this without any extra characters):
                 {
@@ -374,7 +372,6 @@ public class OpenAIService {
                 You must respond with a JSON object containing topicId, aiSummary, and content fields.
                 CRITICAL: Return ONLY the raw JSON object without any markdown code blocks or formatting.
                 Do NOT wrap the response in ```json or ``` tags.
-                The response must start directly with { and end with }.
 
                 Example format (return exactly like this without any extra characters):
                 {
