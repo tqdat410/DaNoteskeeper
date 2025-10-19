@@ -5,6 +5,7 @@ import app.notekeeper.model.dto.request.TopicUpdateRequest;
 import app.notekeeper.model.dto.response.JSendResponse;
 import app.notekeeper.model.dto.response.TopicResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface TopicService {
@@ -18,5 +19,7 @@ public interface TopicService {
     JSendResponse<Void> deleteTopic(UUID topicId);
 
     void initDefaultTopic(UUID userId);
+
+    JSendResponse<List<TopicResponse>> getAllTopicsByUserId(UUID userId);
 
 }

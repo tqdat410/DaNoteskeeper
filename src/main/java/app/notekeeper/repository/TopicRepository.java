@@ -1,5 +1,6 @@
 package app.notekeeper.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,5 +15,7 @@ public interface TopicRepository extends JpaRepository<Topic, UUID> {
 
     @Query("SELECT t FROM Topic t WHERE t.isDefault = true AND t.owner.id = :ownerId")
     Optional<Topic> findByIsDefaultTrueAndOwnerId(UUID ownerId);
+
+    List<Topic> findByOwnerId(UUID ownerId);
 
 }
