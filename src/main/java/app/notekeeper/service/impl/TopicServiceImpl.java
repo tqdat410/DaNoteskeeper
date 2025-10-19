@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -149,5 +150,24 @@ public class TopicServiceImpl implements TopicService {
                 .build();
 
         topicRepository.save(defaultTopic);
+    }
+
+    @Override
+    public JSendResponse<List<TopicResponse>> getAllTopicsByUserId(UUID userId) {
+
+        List<Topic> topics = topicRepository.findByOwnerId(userId);
+
+        List<TopicResponse> responses = topics.stream()
+                .map(topic -> TopicResponse.builder()
+                        .id(topic.getId())
+                        .name(topic.getName())
+                        .description(topic.getDescription())
+                        .aiSummary(topic.getAiSummary())
+                        .ownerId(topic.getOwner().getId())
+                        .ownerDisplayName(topic.getOwner().getDisplayName())
+                        .build())
+                .toList();
+
+        return JSendResponse.success(responses, "View all topics of user successfully");
     }
 }

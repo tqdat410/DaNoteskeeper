@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 import java.util.UUID;
@@ -100,6 +101,19 @@ public class TopicController {
     })
     public ResponseEntity<JSendResponse<Void>> deleteTopic(@PathVariable("id") UUID topicId) {
         JSendResponse<Void> response = topicService.deleteTopic(topicId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Get all topics by user ID", description = "Retrieve all topics owned by a specific user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Topics retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = JSendResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden",
+                    content = @Content(schema = @Schema(implementation = JSendResponse.class)))
+    })
+    public ResponseEntity<JSendResponse<List<TopicResponse>>> getAllTopicsByUserId(@PathVariable("userId") UUID userId) {
+        JSendResponse<List<TopicResponse>> response = topicService.getAllTopicsByUserId(userId);
         return ResponseEntity.ok(response);
     }
 }
