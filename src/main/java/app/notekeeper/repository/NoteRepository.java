@@ -45,9 +45,57 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
                         @Param("type") NoteType type,
                         Pageable pageable);
 
+        /**
+         * Find all notes in a specific topic (paginated, without loading embedding)
+         * Used for getting notes in shared topics
+         */
+        @Query("SELECT new app.notekeeper.model.dto.response.NoteQueryResponse(" +
+                        "n.id, n.owner, n.topic, n.title, n.description, n.content, n.aiSummary, n.type, n.fileUrl, n.createdAt, n.updatedAt) "
+                        +
+                        "FROM Note n WHERE n.topic.id = :topicId " +
+                        "ORDER BY n.createdAt DESC")
+        Page<NoteQueryResponse> findNotesByTopicId(@Param("topicId") UUID topicId, Pageable pageable);
+
+        /**
+         * Find note by ID and topic ID (without loading embedding)
+         * Used for validating note belongs to shared topic
+         */
+        @Query("SELECT new app.notekeeper.model.dto.response.NoteQueryResponse(" +
+                        "n.id, n.owner, n.topic, n.title, n.description, n.content, n.aiSummary, n.type, n.fileUrl, n.createdAt, n.updatedAt) "
+                        +
+                        "FROM Note n WHERE n.id = :noteId AND n.topic.id = :topicId")
+        Optional<NoteQueryResponse> findNoteByIdAndTopicId(@Param("noteId") UUID noteId,
+                        @Param("topicId") UUID topicId);
+
         @Modifying
         @Query("UPDATE Note n SET n.embedding = :embedding WHERE n.id = :noteId")
         void updateEmbedding(@Param("noteId") UUID noteId, @Param("embedding") float[] embedding);
+
+        /**
+         * Update note title and content (for TEXT notes only)
+         * Avoids loading full entity with embedding
+         */
+        @Modifying
+        @Query("UPDATE Note n SET n.title = :title, n.content = :content WHERE n.id = :noteId")
+        void updateTitleAndContent(@Param("noteId") UUID noteId, @Param("title") String title,
+                        @Param("content") String content);
+
+        /**
+         * Delete note by ID without loading entity
+         * Avoids embedding field loading issue
+         */
+        @Modifying
+        @Query("DELETE FROM Note n WHERE n.id = :noteId")
+        void deleteNoteById(@Param("noteId") UUID noteId);
+
+        /**
+         * Update embedding and AI summary for TEXT note after content update
+         * Avoids loading full entity with embedding
+         */
+        @Modifying
+        @Query("UPDATE Note n SET n.embedding = :embedding, n.aiSummary = :summary WHERE n.id = :noteId")
+        void updateEmbeddingAndSummary(@Param("noteId") UUID noteId, @Param("embedding") float[] embedding,
+                        @Param("summary") String summary);
 
         @Modifying
         @Query("UPDATE Note n SET n.topic = :topic, n.aiSummary = :summary WHERE n.id = :noteId")

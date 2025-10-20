@@ -2,6 +2,7 @@ package app.notekeeper.service;
 
 import java.util.UUID;
 
+import app.notekeeper.event.NoteContentUpdatedEvent;
 import app.notekeeper.event.NoteCreatedEvent;
 import app.notekeeper.model.dto.request.RetrieveNoteRequest;
 import app.notekeeper.model.dto.response.RetrieveNoteResponse;
@@ -13,6 +14,11 @@ public interface AIService {
      * generate embedding
      */
     void processNote(NoteCreatedEvent event);
+
+    /**
+     * Re-generate embedding when TEXT note content is updated
+     */
+    void updateNoteEmbedding(NoteContentUpdatedEvent event);
 
     /**
      * Retrieve and answer user query based on similar notes

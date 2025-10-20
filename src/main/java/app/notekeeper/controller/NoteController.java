@@ -2,12 +2,10 @@ package app.notekeeper.controller;
 
 import java.util.UUID;
 
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -126,40 +124,18 @@ public class NoteController {
         }
 
         @GetMapping("/{noteId}")
-        @Operation(summary = "Get text note", description = "Retrieve a TEXT note by ID")
+        @Operation(summary = "Get note detail", description = "Retrieve note details by ID. For TEXT notes, returns content. For IMAGE/DOCUMENT notes, returns file URL.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Note retrieved successfully"),
-                        @ApiResponse(responseCode = "400", description = "Invalid note type", content = @Content(schema = @Schema(implementation = JSendResponse.class))),
                         @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = JSendResponse.class))),
                         @ApiResponse(responseCode = "404", description = "Note not found", content = @Content(schema = @Schema(implementation = JSendResponse.class)))
         })
-        public ResponseEntity<JSendResponse<NoteResponse>> getTextNote(
+        public ResponseEntity<JSendResponse<NoteResponse>> getNoteDetail(
                         @Parameter(description = "Note ID", required = true) @PathVariable UUID noteId) {
 
-                log.info("Get text note request for ID: {}", noteId);
-                JSendResponse<NoteResponse> response = noteService.getTextNote(noteId);
+                log.info("Get note detail request for ID: {}", noteId);
+                JSendResponse<NoteResponse> response = noteService.getNoteDetail(noteId);
                 return ResponseEntity.ok(response);
-        }
-
-        @GetMapping("/{noteId}/stream")
-        @Operation(summary = "Stream file", description = "Stream IMAGE or DOCUMENT file")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "File streamed successfully"),
-                        @ApiResponse(responseCode = "400", description = "Invalid note type", content = @Content(schema = @Schema(implementation = JSendResponse.class))),
-                        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = JSendResponse.class))),
-                        @ApiResponse(responseCode = "404", description = "Note or file not found", content = @Content(schema = @Schema(implementation = JSendResponse.class)))
-        })
-        public ResponseEntity<Resource> streamFile(
-                        @Parameter(description = "Note ID", required = true) @PathVariable UUID noteId) {
-
-                log.info("Stream file request for note ID: {}", noteId);
-                Resource resource = noteService.streamFile(noteId);
-
-                return ResponseEntity.ok()
-                                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                                .header(HttpHeaders.CONTENT_DISPOSITION,
-                                                "inline; filename=\"" + resource.getFilename() + "\"")
-                                .body(resource);
         }
 
         @PutMapping("/{noteId}")

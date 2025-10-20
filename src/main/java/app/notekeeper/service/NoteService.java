@@ -2,7 +2,6 @@ package app.notekeeper.service;
 
 import java.util.UUID;
 
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,13 +12,11 @@ import app.notekeeper.model.enums.NoteType;
 
 public interface NoteService {
 
-    JSendResponse<NoteResponse> getTextNote(UUID noteId);
+    JSendResponse<NoteResponse> getNoteDetail(UUID noteId);
 
     JSendResponse<NoteResponse> updateTextNote(UUID noteId, NoteUpdateRequest request);
 
     JSendResponse<Void> deleteNote(UUID noteId);
-
-    Resource streamFile(UUID noteId);
 
     JSendResponse<Page<NoteResponse>> getNotes(UUID topicId, NoteType type, Pageable pageable);
 

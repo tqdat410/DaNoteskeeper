@@ -2,7 +2,8 @@ package app.notekeeper.service.impl;
 
 import java.util.UUID;
 
-import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,11 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import app.notekeeper.common.exception.ServiceException;
 import app.notekeeper.common.exception.SystemException;
 import app.notekeeper.common.exception.ValidationException;
+import app.notekeeper.event.NoteContentUpdatedEvent;
 import app.notekeeper.model.dto.request.NoteUpdateRequest;
 import app.notekeeper.model.dto.response.JSendResponse;
 import app.notekeeper.model.dto.response.NoteQueryResponse;
 import app.notekeeper.model.dto.response.NoteResponse;
-import app.notekeeper.model.entity.Note;
 import app.notekeeper.model.enums.NoteType;
 import app.notekeeper.repository.NoteRepository;
 import app.notekeeper.security.SecurityUtils;
@@ -32,11 +33,15 @@ public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository noteRepository;
     private final IOService ioService;
+    private final ApplicationEventPublisher eventPublisher;
+
+    @Value("${app.deployment-url}")
+    private String deploymentUrl;
 
     @Override
-    public JSendResponse<NoteResponse> getTextNote(UUID noteId) {
+    public JSendResponse<NoteResponse> getNoteDetail(UUID noteId) {
         try {
-            log.info("Getting text note with ID: {}", noteId);
+            log.info("Getting note detail with ID: {}", noteId);
 
             NoteQueryResponse note = noteRepository.findNoteResponseById(noteId)
                     .orElseThrow(() -> ServiceException.resourceNotFound("Note not found with ID: " + noteId));
@@ -51,22 +56,15 @@ public class NoteServiceImpl implements NoteService {
                 throw ServiceException.businessRuleViolation("You are not allowed to view this note");
             }
 
-            // Only TEXT type can be retrieved this way
-            if (note.getType() != NoteType.TEXT) {
-                throw ValidationException.invalidFormat(
-                        java.util.Map.of("type",
-                                "This endpoint only supports TEXT notes. Use /stream for IMAGE/DOCUMENT"));
-            }
-
             NoteResponse response = buildNoteResponseFromQuery(note);
-            log.info("Text note retrieved successfully: {}", noteId);
+            log.info("Note detail retrieved successfully: {}", noteId);
 
             return JSendResponse.success(response, "Note retrieved successfully");
 
         } catch (ServiceException | ValidationException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed to get text note: {}", noteId, e);
+            log.error("Failed to get note detail: {}", noteId, e);
             throw SystemException.systemError("Failed to retrieve note");
         }
     }
@@ -76,7 +74,8 @@ public class NoteServiceImpl implements NoteService {
         try {
             log.info("Updating text note with ID: {}", noteId);
 
-            Note note = noteRepository.findById(noteId)
+            // Use projection to avoid loading embedding field
+            NoteQueryResponse noteQuery = noteRepository.findNoteResponseById(noteId)
                     .orElseThrow(() -> ServiceException.resourceNotFound("Note not found with ID: " + noteId));
 
             // Verify ownership
@@ -85,28 +84,38 @@ public class NoteServiceImpl implements NoteService {
                 throw ServiceException.businessRuleViolation("Authentication required");
             }
 
-            if (!note.getOwner().getId().equals(currentUserId)) {
+            if (!noteQuery.getOwner().getId().equals(currentUserId)) {
                 throw ServiceException.businessRuleViolation("You are not allowed to update this note");
             }
 
             // Only TEXT type can be updated
-            if (note.getType() != NoteType.TEXT) {
+            if (noteQuery.getType() != NoteType.TEXT) {
                 throw ValidationException.invalidFormat(
                         java.util.Map.of("type", "Only TEXT notes can be updated"));
             }
 
-            // Update fields
-            if (request.getTitle() != null) {
-                note.setTitle(request.getTitle());
-            }
-            if (request.getContent() != null) {
-                note.setContent(request.getContent());
-            }
+            // Update fields using update query (avoids loading entity)
+            String newTitle = request.getTitle() != null ? request.getTitle() : noteQuery.getTitle();
+            String newContent = request.getContent() != null ? request.getContent() : noteQuery.getContent();
 
-            noteRepository.save(note);
+            // Check if content has actually changed
+            boolean contentChanged = request.getContent() != null
+                    && !request.getContent().equals(noteQuery.getContent());
+
+            noteRepository.updateTitleAndContent(noteId, newTitle, newContent);
             log.info("Text note updated successfully: {}", noteId);
 
-            NoteResponse response = buildNoteResponse(note);
+            // Publish event to regenerate embedding if content changed
+            if (contentChanged) {
+                log.info("Content changed for note {}, triggering embedding update", noteId);
+                eventPublisher.publishEvent(new NoteContentUpdatedEvent(noteId, newContent));
+            }
+
+            // Fetch updated note to return response
+            NoteQueryResponse updatedNote = noteRepository.findNoteResponseById(noteId)
+                    .orElseThrow(() -> ServiceException.resourceNotFound("Note not found after update"));
+
+            NoteResponse response = buildNoteResponseFromQuery(updatedNote);
             return JSendResponse.success(response, "Note updated successfully");
 
         } catch (ServiceException | ValidationException e) {
@@ -122,7 +131,8 @@ public class NoteServiceImpl implements NoteService {
         try {
             log.info("Deleting note with ID: {}", noteId);
 
-            Note note = noteRepository.findById(noteId)
+            // Use projection to avoid loading embedding field
+            NoteQueryResponse noteQuery = noteRepository.findNoteResponseById(noteId)
                     .orElseThrow(() -> ServiceException.resourceNotFound("Note not found with ID: " + noteId));
 
             // Verify ownership
@@ -131,19 +141,19 @@ public class NoteServiceImpl implements NoteService {
                 throw ServiceException.businessRuleViolation("Authentication required");
             }
 
-            if (!note.getOwner().getId().equals(currentUserId)) {
+            if (!noteQuery.getOwner().getId().equals(currentUserId)) {
                 throw ServiceException.businessRuleViolation("You are not allowed to delete this note");
             }
 
             // Delete file if it's IMAGE or DOCUMENT type
-            if ((note.getType() == NoteType.IMAGE || note.getType() == NoteType.DOCUMENT)
-                    && note.getFileUrl() != null) {
-                ioService.deleteFile(note.getFileUrl());
-                log.info("Associated file deleted: {}", note.getFileUrl());
+            if ((noteQuery.getType() == NoteType.IMAGE || noteQuery.getType() == NoteType.DOCUMENT)
+                    && noteQuery.getFileUrl() != null) {
+                ioService.deleteFile(noteQuery.getFileUrl());
+                log.info("Associated file deleted: {}", noteQuery.getFileUrl());
             }
 
-            // Delete note from database
-            noteRepository.delete(note);
+            // Delete note from database using custom query (no entity loading needed)
+            noteRepository.deleteNoteById(noteId);
             log.info("Note deleted successfully: {}", noteId);
 
             return JSendResponse.success(null, "Note deleted successfully");
@@ -153,47 +163,6 @@ public class NoteServiceImpl implements NoteService {
         } catch (Exception e) {
             log.error("Failed to delete note: {}", noteId, e);
             throw SystemException.systemError("Failed to delete note");
-        }
-    }
-
-    @Override
-    public Resource streamFile(UUID noteId) {
-        try {
-            log.info("Streaming file for note ID: {}", noteId);
-
-            Note note = noteRepository.findById(noteId)
-                    .orElseThrow(() -> ServiceException.resourceNotFound("Note not found with ID: " + noteId));
-
-            // Verify ownership
-            UUID currentUserId = SecurityUtils.getCurrentUserId();
-            if (currentUserId == null) {
-                throw ServiceException.businessRuleViolation("Authentication required");
-            }
-
-            if (!note.getOwner().getId().equals(currentUserId)) {
-                throw ServiceException.businessRuleViolation("You are not allowed to view this note");
-            }
-
-            // Only IMAGE or DOCUMENT type can be streamed
-            if (note.getType() != NoteType.IMAGE && note.getType() != NoteType.DOCUMENT) {
-                throw ValidationException.invalidFormat(
-                        java.util.Map.of("type", "Only IMAGE/DOCUMENT notes can be streamed"));
-            }
-
-            if (note.getFileUrl() == null) {
-                throw ServiceException.resourceNotFound("File URL not found for note: " + noteId);
-            }
-
-            Resource resource = ioService.loadFileAsResource(note.getFileUrl());
-            log.info("File streamed successfully for note: {}", noteId);
-
-            return resource;
-
-        } catch (ServiceException | ValidationException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to stream file for note: {}", noteId, e);
-            throw SystemException.systemError("Failed to stream file");
         }
     }
 
@@ -233,10 +202,9 @@ public class NoteServiceImpl implements NoteService {
      * Build NoteResponse from NoteQueryResponse (projection without embedding)
      */
     private NoteResponse buildNoteResponseFromQuery(NoteQueryResponse note) {
-        return NoteResponse.builder()
+        NoteResponse.NoteResponseBuilder builder = NoteResponse.builder()
                 .id(note.getId())
                 .title(note.getTitle())
-                .content(note.getContent())
                 .description(note.getDescription())
                 .type(note.getType())
                 .ownerId(note.getOwner().getId())
@@ -244,28 +212,21 @@ public class NoteServiceImpl implements NoteService {
                 .topicId(note.getTopic() != null ? note.getTopic().getId() : null)
                 .topicName(note.getTopic() != null ? note.getTopic().getName() : null)
                 .createdAt(note.getCreatedAt())
-                .updatedAt(note.getUpdatedAt())
-                .build();
-    }
+                .updatedAt(note.getUpdatedAt());
 
-    /**
-     * Build NoteResponse from full Note entity (includes embedding)
-     * Used only when full entity is loaded (e.g., after updates)
-     */
-    private NoteResponse buildNoteResponse(Note note) {
-        return NoteResponse.builder()
-                .id(note.getId())
-                .title(note.getTitle())
-                .content(note.getContent())
-                .description(note.getDescription())
-                .type(note.getType())
-                .ownerId(note.getOwner().getId())
-                .ownerDisplayName(note.getOwner().getDisplayName())
-                .topicId(note.getTopic() != null ? note.getTopic().getId() : null)
-                .topicName(note.getTopic() != null ? note.getTopic().getName() : null)
-                .createdAt(note.getCreatedAt())
-                .updatedAt(note.getUpdatedAt())
-                .build();
+        // Add content only for TEXT type
+        if (note.getType() == NoteType.TEXT) {
+            builder.content(note.getContent());
+        }
+
+        // Add fileUrl only for IMAGE/DOCUMENT type with deployment URL prefix
+        if (note.getType() == NoteType.IMAGE || note.getType() == NoteType.DOCUMENT) {
+            if (note.getFileUrl() != null) {
+                builder.fileUrl(deploymentUrl + "/file/" + note.getFileUrl());
+            }
+        }
+
+        return builder.build();
     }
 
 }
