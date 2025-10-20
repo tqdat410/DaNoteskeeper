@@ -6,10 +6,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.notekeeper.common.exception.ServiceException;
+import app.notekeeper.event.NoteSharedEvent;
+import app.notekeeper.event.TopicSharedEvent;
 import app.notekeeper.model.dto.request.ShareNoteRequest;
 import app.notekeeper.model.dto.request.ShareTopicRequest;
 import app.notekeeper.model.dto.response.JSendResponse;
@@ -45,6 +48,7 @@ public class SharingServiceImpl implements SharingService {
     private final TopicRepository topicRepository;
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @org.springframework.beans.factory.annotation.Value("${app.deployment-url}")
     private String deploymentUrl;
@@ -84,6 +88,12 @@ public class SharingServiceImpl implements SharingService {
                 .build();
 
         sharedTopicRepository.save(sharedTopic);
+
+        // Publish event for notification
+        eventPublisher.publishEvent(new TopicSharedEvent(
+                topic.getId(),
+                targetUser.getId(),
+                currentUserId));
 
         log.info("Topic '{}' shared with user '{}' by owner '{}'",
                 topic.getId(), targetUser.getEmail(), currentUserId);
@@ -181,6 +191,12 @@ public class SharingServiceImpl implements SharingService {
                 .build();
 
         sharedNoteRepository.save(sharedNote);
+
+        // Publish event for notification
+        eventPublisher.publishEvent(new NoteSharedEvent(
+                noteQuery.getId(),
+                targetUser.getId(),
+                currentUserId));
 
         log.info("Note '{}' shared with user '{}' by owner '{}'",
                 noteQuery.getId(), targetUser.getEmail(), currentUserId);

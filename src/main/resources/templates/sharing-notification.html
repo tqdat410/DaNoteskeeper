@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}} - DaNoteskeeper</title>
+    <style>
+      :root {
+        --green: #dfba5f;
+        --muted: #666;
+        --bg: #fff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+        background: #f4f6f8;
+        margin: 0;
+        padding: 24px;
+        color: #222;
+      }
+      .card {
+        max-width: 680px;
+        margin: 0 auto;
+        background: var(--bg);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(16, 24, 40, 0.08);
+      }
+      .header {
+        display: table;
+        width: 100%;
+        padding: 20px 24px;
+        background: #dfba5f;
+        color: #fff;
+      }
+      .logo {
+        display: table-cell;
+        vertical-align: middle;
+        width: 120px;
+        padding-right: 18px;
+      }
+      .logo img {
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
+        object-fit: cover;
+        background: transparent;
+        display: block;
+      }
+      .header-text {
+        display: table-cell;
+        vertical-align: middle;
+      }
+      .brand {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        margin: 0;
+        line-height: 1.2;
+      }
+      .subtitle {
+        font-size: 16px;
+        opacity: 0.95;
+        margin: 8px 0 0 0;
+        line-height: 1.2;
+      }
+      .content {
+        padding: 28px 24px;
+      }
+      .greeting {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      .text {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+      }
+      .info-box {
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid #dfba5f;
+        margin: 20px 0;
+      }
+      .info-box p {
+        margin: 8px 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .info-box strong {
+        color: #222;
+        font-weight: 600;
+      }
+      .cta {
+        display: block;
+        text-align: center;
+        margin: 22px 0;
+      }
+      .btn {
+        display: inline-block;
+        background: #dfba5f;
+        color: #fff;
+        text-decoration: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      .footer {
+        padding: 18px 24px;
+        background: #fbfdff;
+        color: #888;
+        font-size: 13px;
+        text-align: center;
+        line-height: 1.4;
+      }
+      .note-text {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      @media (max-width: 600px) {
+        .header {
+          padding: 16px;
+        }
+        .logo {
+          width: 84px;
+          padding-right: 12px;
+        }
+        .logo img {
+          width: 84px;
+          height: 84px;
+        }
+        .brand {
+          font-size: 18px;
+        }
+        .subtitle {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <div class="logo">
+          <img
+            src="https://res.cloudinary.com/do6szo7zy/image/upload/v1759764907/Gemini_Generated_Image_3s3gsr3s3gsr3s3g_1_tlf12t.png"
+            alt="DaNoteskeeper"
+            style="background: transparent; display: block"
+          />
+        </div>
+        <div class="header-text">
+          <div class="brand">DaNoteskeeper</div>
+          <div class="subtitle">{{TITLE}}</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="greeting">Hello <strong>{{USER_NAME}}</strong>,</div>
+        <div class="text">{{MESSAGE}}</div>
+
+        {{SHARED_INFO}}
+
+        <div class="note-text">{{ADDITIONAL_NOTE}}</div>
+      </div>
+
+      <div class="footer">
+        This is an automated message<br />
+        © 2025 DaNoteskeeper
+      </div>
+    </div>
+  </body>
+</html>
