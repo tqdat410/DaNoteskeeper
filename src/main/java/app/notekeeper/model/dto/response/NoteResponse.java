@@ -28,6 +28,9 @@ public class NoteResponse {
     @Schema(description = "Note type", example = "TEXT")
     private NoteType type;
 
+    @Schema(description = "File URL (IMAGE/DOCUMENT type only)", example = "/uploads/notes/file.jpg")
+    private String fileUrl;
+
     @Schema(description = "Owner ID", example = "d290f1ee-6c54-4b01-90e6-d701748f0851")
     private UUID ownerId;
 

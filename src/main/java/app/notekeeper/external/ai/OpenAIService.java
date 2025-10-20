@@ -161,7 +161,7 @@ public class OpenAIService {
                         9. When uncertain between two topics, choose the more general one
 
                         SUMMARY REQUIREMENTS:
-                        Create a concise summary (2-3 sentences, max 200 characters) describing:
+                        Create a concise summary describing:
                         - The main idea or theme of the note
                         - Key points or information
                         - Context or purpose
@@ -311,13 +311,13 @@ public class OpenAIService {
                 8. For ambiguous images, use metadata to help decide
 
                 SUMMARY REQUIREMENTS:
-                Create a concise summary (2-3 sentences, max 200 characters) describing:
+                Create a concise summary describing:
                 - What you see in the image
                 - The main subject or theme
                 - Key visual elements
 
                 CONTENT EXTRACTION:
-                Provide a detailed description of the image (3-5 sentences) that captures:
+                Provide a detailed description of the image that captures:
                 - All visible elements and objects in the image
                 - Colors, composition, and layout
                 - Text or labels if present
@@ -355,7 +355,7 @@ public class OpenAIService {
                 9. Consider the document type (report, presentation, form, etc.) in your analysis
 
                 SUMMARY REQUIREMENTS:
-                Create a concise summary (2-3 sentences, max 200 characters) describing:
+                Create a concise summary describing:
                 - The main topic or purpose of the document
                 - Key points or findings
                 - Document type and context
@@ -474,6 +474,80 @@ public class OpenAIService {
         }
 
         return context.toString();
+    }
+
+    /**
+     * Generate AI summary for updated TEXT note content
+     * 
+     * @param title     Note title
+     * @param content   Note content (updated)
+     * @param topicName Topic name (optional)
+     * @return AI-generated summary
+     */
+    public String generateSummaryForTextNote(String title, String content, String topicName) {
+        try {
+            log.info("Generating summary for TEXT note with title: '{}', topic: '{}'", title, topicName);
+
+            if (content == null || content.trim().isEmpty()) {
+                log.warn("Empty content provided for summary generation");
+                return "Empty note content";
+            }
+
+            String topicContext = topicName != null
+                    ? String.format("Topic: %s\n", topicName)
+                    : "";
+
+            String summary = mainChatClient.prompt()
+                    .system("""
+                            You are an intelligent note summarization assistant.
+                            Your task is to create a concise, informative summary of text note content.
+
+                            SUMMARY REQUIREMENTS:
+                            1. Create a concise summary
+                            2. Capture the main idea or theme of the note
+                            3. Include key points or important information
+                            4. Maintain context and purpose of the note
+                            5. Be objective and accurate
+                            6. Use clear, simple language
+
+                            OUTPUT FORMAT:
+                            Return ONLY the summary text without any additional formatting, markdown, or labels.
+                            Do NOT include phrases like "Summary:" or "This note discusses..."
+                            Just provide the direct summary content.
+
+                            Example outputs:
+                            - "Meeting notes covering Q4 project deliverables, team assignments, and upcoming milestones."
+                            - "Recipe for chocolate chip cookies with ingredients list and step-by-step baking instructions."
+                            - "Study notes on photosynthesis process, including light reactions and Calvin cycle stages."
+                            """)
+                    .user("""
+                            Create a concise summary for the following note:
+
+                            Title: {title}
+                            {topicContext}
+                            Content:
+                            {content}
+
+                            Return ONLY the summary text.
+                            """)
+                    .user(u -> u
+                            .param("title", title)
+                            .param("topicContext", topicContext)
+                            .param("content", content))
+                    .options(OpenAiChatOptions.builder()
+                            .maxTokens(150)
+                            .temperature(0.3)
+                            .build())
+                    .call()
+                    .content();
+
+            log.info("Successfully generated summary (length: {} chars)", summary != null ? summary.length() : 0);
+            return summary != null ? summary : "Summary generation failed";
+
+        } catch (Exception e) {
+            log.error("Error generating summary for text note", e);
+            return "Error generating summary";
+        }
     }
 
 }

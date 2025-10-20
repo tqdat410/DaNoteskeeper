@@ -13,6 +13,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import app.notekeeper.common.exception.ServiceException;
 import app.notekeeper.common.exception.SystemException;
+import app.notekeeper.event.NoteContentUpdatedEvent;
 import app.notekeeper.event.NoteCreatedEvent;
 import app.notekeeper.external.ai.OllamaService;
 import app.notekeeper.external.ai.OpenAIService;
@@ -77,6 +78,62 @@ public class AIServiceImpl implements AIService {
             log.info("Note processing completed successfully for note ID: {}", event.getNoteId());
         } catch (Exception e) {
             log.error("Failed to process note with ID: {}", event.getNoteId(), e);
+            // Don't throw - async method, just log error
+        }
+    }
+
+    @Override
+    @TransactionalEventListener
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateNoteEmbedding(NoteContentUpdatedEvent event) {
+        try {
+            log.info("Starting async embedding and summary update for note ID: {}", event.getNoteId());
+
+            // Check if content has changed and is not empty
+            if (event.getNewContent() == null || event.getNewContent().trim().isEmpty()) {
+                log.warn("Note {} has empty content, skipping embedding update", event.getNoteId());
+                return;
+            }
+
+            // Step 1: Get note info to generate summary with context
+            NoteQueryResponse noteQuery = noteRepository.findNoteResponseById(event.getNoteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Note not found with ID: " + event.getNoteId()));
+
+            log.info("Updating note {} - title: '{}', topic: '{}'",
+                    event.getNoteId(),
+                    noteQuery.getTitle(),
+                    noteQuery.getTopic() != null ? noteQuery.getTopic().getName() : "null");
+
+            // Step 2: Generate new AI summary from updated content using LLM
+            String topicName = noteQuery.getTopic() != null ? noteQuery.getTopic().getName() : null;
+            String aiSummary = openAIService.generateSummaryForTextNote(
+                    noteQuery.getTitle(),
+                    event.getNewContent(),
+                    topicName);
+
+            log.info("Generated new AI summary for note {}: '{}'", event.getNoteId(), aiSummary);
+
+            // Step 3: Generate new embedding from updated content
+            log.info("Generating new embedding for note {} (content length: {} chars)",
+                    event.getNoteId(), event.getNewContent().length());
+
+            float[] embedding = ollamaService.generateEmbedding(event.getNewContent());
+
+            if (embedding == null) {
+                log.warn("Failed to generate embedding for note: {}, embedding is null", event.getNoteId());
+                return;
+            }
+
+            log.info("Generated new embedding for note {}: [Vector with {} dimensions]",
+                    event.getNoteId(), embedding.length);
+
+            // Step 4: Update both embedding and AI summary in database
+            noteRepository.updateEmbeddingAndSummary(event.getNoteId(), embedding, aiSummary);
+            log.info("Embedding and AI summary updated successfully for note ID: {}", event.getNoteId());
+
+        } catch (Exception e) {
+            log.error("Failed to update embedding and summary for note with ID: {}", event.getNoteId(), e);
             // Don't throw - async method, just log error
         }
     }
