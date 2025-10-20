@@ -3,5 +3,7 @@ package app.notekeeper.model.enums;
 public enum NotiType {
     INFO,
     WARNING,
-    ERROR
+    ERROR,
+    TOPIC_SHARED,
+    NOTE_SHARED
 }
