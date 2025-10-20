@@ -20,6 +20,6 @@ public interface TopicService {
 
     void initDefaultTopic(UUID userId);
 
-    JSendResponse<List<TopicResponse>> getAllTopicsByUserId(UUID userId);
+    JSendResponse<List<TopicResponse>> getAllTopicsByCurrentUser();
 
 }

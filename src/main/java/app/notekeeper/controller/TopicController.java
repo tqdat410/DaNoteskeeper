@@ -104,16 +104,16 @@ public class TopicController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Get all topics by user ID", description = "Retrieve all topics owned by a specific user")
+    @GetMapping("/me")
+    @Operation(summary = "Get all topics of current user", description = "Retrieve all topics owned by the currently authenticated user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Topics retrieved successfully",
                     content = @Content(schema = @Schema(implementation = JSendResponse.class))),
             @ApiResponse(responseCode = "403", description = "Forbidden",
                     content = @Content(schema = @Schema(implementation = JSendResponse.class)))
     })
-    public ResponseEntity<JSendResponse<List<TopicResponse>>> getAllTopicsByUserId(@PathVariable("userId") UUID userId) {
-        JSendResponse<List<TopicResponse>> response = topicService.getAllTopicsByUserId(userId);
+    public ResponseEntity<JSendResponse<List<TopicResponse>>> getAllTopicsByCurrentUser() {
+        JSendResponse<List<TopicResponse>> response = topicService.getAllTopicsByCurrentUser();
         return ResponseEntity.ok(response);
     }
 }
