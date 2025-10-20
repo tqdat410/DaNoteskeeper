@@ -153,9 +153,13 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public JSendResponse<List<TopicResponse>> getAllTopicsByUserId(UUID userId) {
+    public JSendResponse<List<TopicResponse>> getAllTopicsByCurrentUser() {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw ServiceException.businessRuleViolation("User not authenticated");
+        }
 
-        List<Topic> topics = topicRepository.findByOwnerId(userId);
+        List<Topic> topics = topicRepository.findByOwnerId(currentUserId);
 
         List<TopicResponse> responses = topics.stream()
                 .map(topic -> TopicResponse.builder()
@@ -168,6 +172,6 @@ public class TopicServiceImpl implements TopicService {
                         .build())
                 .toList();
 
-        return JSendResponse.success(responses, "View all topics of user successfully");
+        return JSendResponse.success(responses, "View all topics successfully");
     }
 }
