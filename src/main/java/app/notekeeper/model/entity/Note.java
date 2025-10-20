@@ -2,11 +2,15 @@ package app.notekeeper.model.entity;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import app.notekeeper.model.enums.NoteType;
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -45,6 +49,9 @@ public class Note extends BaseEntity {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
+
     @Column(name = "ai_summary")
     private String aiSummary;
 
@@ -55,7 +62,21 @@ public class Note extends BaseEntity {
     @Column(name = "file_url")
     private String fileUrl;
 
-    @Column(name = "embedding", columnDefinition = "vector(1536)")
-    private float[] embedding; // Vector field - có thể cần custom type cho PostgreSQL vector
+    @Column(name = "embedding", columnDefinition = "vector(768)")
+    @Basic(fetch = FetchType.LAZY)
+    @JsonIgnore
+    private float[] embedding;
 
+    public Note(UUID id, User owner, Topic topic, String title, String description, String content, String aiSummary,
+            NoteType type, String fileUrl) {
+        this.id = id;
+        this.owner = owner;
+        this.topic = topic;
+        this.title = title;
+        this.description = description;
+        this.content = content;
+        this.aiSummary = aiSummary;
+        this.type = type;
+        this.fileUrl = fileUrl;
+    }
 }

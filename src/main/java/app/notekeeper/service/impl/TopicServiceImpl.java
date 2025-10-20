@@ -1,6 +1,5 @@
 package app.notekeeper.service.impl;
 
-
 import app.notekeeper.common.exception.ServiceException;
 import app.notekeeper.model.dto.request.TopicCreateRequest;
 import app.notekeeper.model.dto.request.TopicUpdateRequest;
@@ -16,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -80,7 +80,7 @@ public class TopicServiceImpl implements TopicService {
                 .ownerDisplayName(topic.getOwner().getDisplayName())
                 .build();
 
-        return JSendResponse.success(response,"View topic successfully");
+        return JSendResponse.success(response, "View topic successfully");
     }
 
     @Override
@@ -97,9 +97,12 @@ public class TopicServiceImpl implements TopicService {
             throw ServiceException.businessRuleViolation("You are not allowed to update this topic");
         }
 
-        if (request.getName() != null) topic.setName(request.getName());
-        if (request.getDescription() != null) topic.setDescription(request.getDescription());
-        if (request.getAiSummary() != null) topic.setAiSummary(request.getAiSummary());
+        if (request.getName() != null)
+            topic.setName(request.getName());
+        if (request.getDescription() != null)
+            topic.setDescription(request.getDescription());
+        if (request.getAiSummary() != null)
+            topic.setAiSummary(request.getAiSummary());
 
         topicRepository.save(topic);
 
@@ -112,7 +115,7 @@ public class TopicServiceImpl implements TopicService {
                 .ownerDisplayName(topic.getOwner().getDisplayName())
                 .build();
 
-        return JSendResponse.success(response,"Update topic successfully");
+        return JSendResponse.success(response, "Update topic successfully");
     }
 
     @Override
@@ -133,5 +136,42 @@ public class TopicServiceImpl implements TopicService {
 
         return JSendResponse.success(null, "Delete topic successfully");
     }
-}
 
+    @Override
+    public void initDefaultTopic(UUID userId) {
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> ServiceException.resourceNotFound("User not found"));
+
+        Topic defaultTopic = Topic.builder()
+                .name("Default Topic")
+                .description("This is the default topic.")
+                .owner(owner)
+                .isDefault(true)
+                .build();
+
+        topicRepository.save(defaultTopic);
+    }
+
+    @Override
+    public JSendResponse<List<TopicResponse>> getAllTopicsByCurrentUser() {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw ServiceException.businessRuleViolation("User not authenticated");
+        }
+
+        List<Topic> topics = topicRepository.findByOwnerId(currentUserId);
+
+        List<TopicResponse> responses = topics.stream()
+                .map(topic -> TopicResponse.builder()
+                        .id(topic.getId())
+                        .name(topic.getName())
+                        .description(topic.getDescription())
+                        .aiSummary(topic.getAiSummary())
+                        .ownerId(topic.getOwner().getId())
+                        .ownerDisplayName(topic.getOwner().getDisplayName())
+                        .build())
+                .toList();
+
+        return JSendResponse.success(responses, "View all topics successfully");
+    }
+}
