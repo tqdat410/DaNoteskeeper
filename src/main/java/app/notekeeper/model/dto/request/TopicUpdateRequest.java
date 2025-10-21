@@ -6,5 +6,4 @@ import lombok.Data;
 public class TopicUpdateRequest {
     private String name;
     private String description;
-    private String aiSummary;
 }
