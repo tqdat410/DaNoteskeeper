@@ -39,7 +39,6 @@ public class TopicServiceImpl implements TopicService {
         Topic topic = Topic.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .aiSummary(request.getAiSummary())
                 .owner(owner)
                 .build();
 
@@ -49,7 +48,6 @@ public class TopicServiceImpl implements TopicService {
                 .id(topic.getId())
                 .name(topic.getName())
                 .description(topic.getDescription())
-                .aiSummary(topic.getAiSummary())
                 .ownerId(owner.getId())
                 .ownerDisplayName(owner.getDisplayName())
                 .build();
@@ -101,8 +99,6 @@ public class TopicServiceImpl implements TopicService {
             topic.setName(request.getName());
         if (request.getDescription() != null)
             topic.setDescription(request.getDescription());
-        if (request.getAiSummary() != null)
-            topic.setAiSummary(request.getAiSummary());
 
         topicRepository.save(topic);
 
@@ -110,7 +106,6 @@ public class TopicServiceImpl implements TopicService {
                 .id(topic.getId())
                 .name(topic.getName())
                 .description(topic.getDescription())
-                .aiSummary(topic.getAiSummary())
                 .ownerId(topic.getOwner().getId())
                 .ownerDisplayName(topic.getOwner().getDisplayName())
                 .build();
