@@ -21,19 +21,20 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    @Override
-    public JSendResponse<UserProfileResponse> getUserProfile(UUID userId) {
+    public JSendResponse<UserProfileResponse> getUserProfile() {
+        // Lấy userId từ người dùng hiện tại
         UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        // Kiểm tra xem người dùng có đăng nhập hay không
         if (currentUserId == null) {
             throw ServiceException.businessRuleViolation("User not authenticated");
         }
-        if (!currentUserId.equals(userId)) {
-            throw ServiceException.businessRuleViolation("You are not allowed to view this profile");
-        }
 
-        User user = userRepository.findById(userId)
+        // Truy vấn người dùng từ database
+        User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> ServiceException.resourceNotFound("User not found"));
 
+        // Xây dựng đối tượng phản hồi UserProfileResponse
         UserProfileResponse response = UserProfileResponse.builder()
                 .id(user.getId())
                 .displayName(user.getDisplayName())
@@ -43,22 +44,25 @@ public class UserServiceImpl implements UserService {
                 .avatarUrl(user.getAvatarUrl())
                 .build();
 
-        return JSendResponse.success(response,"View profile successfully");
+        // Trả về kết quả trong dạng JSendResponse
+        return JSendResponse.success(response, "View profile successfully");
     }
 
     @Override
-    public JSendResponse<UserProfileResponse> updateUserProfile(UUID userId, UserProfileUpdateRequest request) {
+    public JSendResponse<UserProfileResponse> updateUserProfile(UserProfileUpdateRequest request) {
+        // Lấy userId của người dùng hiện tại từ hệ thống xác thực
         UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        // Kiểm tra nếu người dùng chưa đăng nhập
         if (currentUserId == null) {
             throw ServiceException.businessRuleViolation("User not authenticated");
         }
-        if (!currentUserId.equals(userId)) {
-            throw ServiceException.businessRuleViolation("You are not allowed to update this profile");
-        }
 
-        User user = userRepository.findById(userId)
+        // Tìm người dùng trong cơ sở dữ liệu
+        User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> ServiceException.resourceNotFound("User not found"));
 
+        // Cập nhật thông tin người dùng từ request
         if (request.getDisplayName() != null) {
             user.setDisplayName(request.getDisplayName());
         }
@@ -72,8 +76,10 @@ public class UserServiceImpl implements UserService {
             user.setAvatarUrl(request.getAvatarUrl());
         }
 
+        // Lưu người dùng đã được cập nhật
         userRepository.save(user);
 
+        // Tạo và trả về phản hồi với thông tin người dùng mới
         UserProfileResponse response = UserProfileResponse.builder()
                 .id(user.getId())
                 .displayName(user.getDisplayName())
@@ -83,6 +89,6 @@ public class UserServiceImpl implements UserService {
                 .avatarUrl(user.getAvatarUrl())
                 .build();
 
-        return JSendResponse.success(response,"Profile updated successfully");
+        return JSendResponse.success(response, "Profile updated successfully");
     }
 }

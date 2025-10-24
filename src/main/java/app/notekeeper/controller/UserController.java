@@ -29,7 +29,7 @@ public class UserController {
     /**
      * 🟡 View user profile
      */
-    @GetMapping("/{id}")
+    @GetMapping("/profile")
     @Operation(summary = "Get user profile", description = "Retrieve the profile of the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile retrieved successfully",
@@ -39,16 +39,15 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(schema = @Schema(implementation = JSendResponse.class)))
     })
-    public ResponseEntity<JSendResponse<UserProfileResponse>> getUserProfile(@PathVariable("id") UUID userId) {
-        log.info("Get profile for user: {}", userId);
-        JSendResponse<UserProfileResponse> response = userService.getUserProfile(userId);
+    public ResponseEntity<JSendResponse<UserProfileResponse>> getUserProfile() {
+        JSendResponse<UserProfileResponse> response = userService.getUserProfile();
         return ResponseEntity.ok(response);
     }
 
     /**
      * 🟠 Update user profile
      */
-    @PutMapping("/{id}")
+    @PutMapping("/profile")
     @Operation(summary = "Update user profile", description = "Update profile of the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile updated successfully",
@@ -61,11 +60,11 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = JSendResponse.class)))
     })
     public ResponseEntity<JSendResponse<UserProfileResponse>> updateUserProfile(
-            @PathVariable("id") UUID userId,
             @RequestBody UserProfileUpdateRequest request) {
 
-        log.info("Update profile for user: {}", userId);
-        JSendResponse<UserProfileResponse> response = userService.updateUserProfile(userId, request);
+
+        JSendResponse<UserProfileResponse> response = userService.updateUserProfile(request);
+
         return ResponseEntity.ok(response);
     }
 }

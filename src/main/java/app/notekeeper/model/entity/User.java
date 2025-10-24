@@ -1,5 +1,6 @@
 package app.notekeeper.model.entity;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
 
@@ -52,7 +53,7 @@ public class User extends BaseEntity {
 
     @Temporal(TemporalType.DATE)
     @Column(name = "dob", nullable = true)
-    private Date dob;
+    private LocalDate dob;
 
     @Column(name = "avatar_url", nullable = true)
     private String avatarUrl;
