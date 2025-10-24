@@ -8,7 +8,8 @@ import java.util.UUID;
 
 public interface UserService {
 
-    JSendResponse<UserProfileResponse> getUserProfile(UUID userId);
-    JSendResponse<UserProfileResponse> updateUserProfile(UUID userId, UserProfileUpdateRequest request);
+  JSendResponse<UserProfileResponse> getUserProfile();
+
+    JSendResponse<UserProfileResponse> updateUserProfile(UserProfileUpdateRequest request);
 }
 

@@ -3,12 +3,12 @@ package app.notekeeper.model.dto.request;
 import app.notekeeper.model.enums.Gender;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class UserProfileUpdateRequest {
     private String displayName;
     private Gender gender;
-    private Date dob;
+    private LocalDate dob;
     private String avatarUrl;
 }
