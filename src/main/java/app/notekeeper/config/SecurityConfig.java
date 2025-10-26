@@ -90,6 +90,7 @@ public class SecurityConfig {
                         // OAuth2 endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/ws/**").permitAll() // Allow WebSocket connections
+                        .requestMatchers("/api/v1/embedding").permitAll()
                         // All other requests need authentication
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
