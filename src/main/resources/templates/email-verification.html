@@ -57,6 +57,21 @@
       .already-registered {
         color: #2196f3;
       }
+      .btn {
+        display: inline-block;
+        padding: 12px 32px;
+        background: #dfba5f;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: background 0.3s;
+      }
+      .btn:hover {
+        background: #c9a54d;
+      }
     </style>
   </head>
   <body>
@@ -72,6 +87,7 @@
         <div class="message">
           Email verification successful! Your account is now active.
         </div>
+        <a href="danoteskeeper://open" class="btn">Return to App</a>
       </div>
 
       <div th:if="${result == 'EXPIRED'}" class="expired">
@@ -86,6 +102,7 @@
           This email is already registered. You can login directly to your
           account.
         </div>
+        <a href="danoteskeeper://open" class="btn">Return to App</a>
       </div>
 
       <div th:if="${result == 'ERROR'}" class="error">
